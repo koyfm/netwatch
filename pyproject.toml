@@ -7,7 +7,10 @@ authors = [
     { name = "Itzik Koyfman", email = "itzik@koyfman.net" }
 ]
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "pydantic>=2.12.5",
+    "pydantic-settings>=2.12.0",
+]
 
 [project.scripts]
 netwatch = "netwatch.main:main"
