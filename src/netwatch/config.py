@@ -1,5 +1,14 @@
-from pydantic import BaseModel
+from typing import Annotated, Union
+from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from netwatch.provider.facebook import FacebookSource
+from netwatch.provider.rss import RSSSource
+
+SourceConfig = Annotated[
+    Union[FacebookSource, RSSSource],
+    Field(discriminator="provider"),
+]
 
 
 class DatabaseConfig(BaseModel):
@@ -7,9 +16,10 @@ class DatabaseConfig(BaseModel):
 
 
 class Settings(BaseSettings):
-    database: DatabaseConfig = DatabaseConfig()
-
     model_config = SettingsConfigDict(env_nested_delimiter="__", extra="ignore")
+
+    database: DatabaseConfig = DatabaseConfig()
+    sources: list[SourceConfig] = []
 
 
 settings = Settings()
