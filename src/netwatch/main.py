@@ -1,8 +1,12 @@
+import asyncio
 import logging
 from inspect import get_annotations
 from types import get_original_bases
 from typing import get_args
+
 from netwatch.config import settings
+from netwatch.database.connection import get_session
+from netwatch.database.models import Post
 from netwatch.provider.base import BaseProvider
 
 log = logging.getLogger(__name__)
@@ -35,3 +39,21 @@ def main():
         providers.append(provider)
 
     log.info(f"Initialized {len(providers)} providers")
+    try:
+        asyncio.run(poll(providers))
+    except KeyboardInterrupt:
+        pass
+
+
+async def poll_provider(provider: BaseProvider):
+    with get_session() as session:
+        async for post in provider.fetch():
+            session.merge(Post(**post.model_dump()))
+            session.commit()
+            log.info(f"Fetched post: {post.url}")
+
+
+async def poll(providers: list[BaseProvider]):
+    while True:
+        await asyncio.gather(*(poll_provider(provider) for provider in providers))
+        await asyncio.sleep(60)
