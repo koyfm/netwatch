@@ -25,3 +25,6 @@ build-backend = "uv_build"
 dev = [
     "ruff>=0.14.10",
 ]
+
+[tool.ruff.lint]
+select = ["F", "I", "UP", "A", "C4"]

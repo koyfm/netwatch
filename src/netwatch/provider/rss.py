@@ -1,5 +1,6 @@
 from collections.abc import AsyncIterator
 from typing import Literal
+
 from netwatch.provider.base import BaseProvider, BaseSource, Post
 
 

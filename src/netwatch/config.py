@@ -1,4 +1,5 @@
-from typing import Annotated, Union
+from typing import Annotated
+
 from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -6,7 +7,7 @@ from netwatch.provider.facebook import FacebookSource
 from netwatch.provider.rss import RSSSource
 
 SourceConfig = Annotated[
-    Union[FacebookSource, RSSSource],
+    FacebookSource | RSSSource,
     Field(discriminator="provider"),
 ]
 
