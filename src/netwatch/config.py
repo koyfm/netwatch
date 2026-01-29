@@ -21,6 +21,7 @@ class Settings(BaseSettings):
 
     database: DatabaseConfig = DatabaseConfig()
     sources: list[SourceConfig] = []
+    notifications: list[str] = []
 
 
 settings = Settings()

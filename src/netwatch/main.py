@@ -4,6 +4,7 @@ from inspect import get_annotations
 from types import get_original_bases
 from typing import get_args
 
+import apprise
 from playwright.async_api import Browser, async_playwright
 
 from netwatch.config import settings
@@ -12,10 +13,14 @@ from netwatch.database.models import Post
 from netwatch.provider.base import BaseProvider
 
 logger = logging.getLogger(__name__)
+apobj = apprise.Apprise()
 
 
 def main():
     logging.basicConfig(level=logging.DEBUG)
+
+    apobj.add(settings.notifications)  # type: ignore
+    logger.info(f"Initialized {len(settings.notifications)} notification services")
 
     provider_cls_map = {}
     for provider_cls in BaseProvider.__subclasses__():
@@ -51,9 +56,22 @@ async def poll_provider(provider: BaseProvider, browser: Browser):
     with get_session() as session:
         try:
             async for post in provider.fetch(browser=browser):
-                session.merge(Post(**post.model_dump()))
+                p = Post(**post.model_dump())
+                new = session.get(Post, (p.provider, p.post_id, p.comment_id)) is None
+                session.merge(p)
                 session.commit()
                 logger.info(f"Fetched post: {post.url}")
+                if new:
+                    body = f"{post.author}: {post.title}\n{post.content}\n[View Post]({post.url})"
+                    if post.comment_id:
+                        body = f"Reply {post.provider}:{post.post_id}:{post.comment_id}\n{body}"
+                    else:
+                        body = f"Post {post.provider}:{post.post_id}\n{body}"
+                    await apobj.async_notify(
+                        body=body,
+                        title=post.title,
+                        body_format=apprise.NotifyFormat.MARKDOWN,
+                    )
         except:
             logger.exception(f"Error fetching posts from provider: {provider}")
 
@@ -66,4 +84,4 @@ async def poll(providers: list[BaseProvider]):
                 *(poll_provider(provider, browser) for provider in providers)
             )
             await browser.close()
-            await asyncio.sleep(60)
+            await asyncio.sleep(600)
