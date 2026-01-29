@@ -23,5 +23,5 @@ class BaseProvider[T: BaseSource]:
         self.source = source
 
     @abstractmethod
-    def fetch(self) -> AsyncIterator[Post]:
+    def fetch(self, **kwargs) -> AsyncIterator[Post]:
         raise NotImplementedError

@@ -9,5 +9,5 @@ class RSSSource(BaseSource):
 
 
 class RSSProvider(BaseProvider[RSSSource]):
-    def fetch(self) -> AsyncIterator[Post]:
+    def fetch(self, **_) -> AsyncIterator[Post]:
         raise NotImplementedError
